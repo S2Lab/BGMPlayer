@@ -4,7 +4,7 @@ var BGMPlayer={}; // 所有的接口都通过这个调用
     // 信息
     BGMPlayer.infos={};
         BGMPlayer.infos.full_name="BGM Player";
-        BGMPlayer.infos.version="0.2.0";
+        BGMPlayer.infos.version="0.2.1";
         BGMPlayer.infos.author="Firok";
         BGMPlayer.infos.link="https://github.com/S2Lab/BGMPlayer/";
         
@@ -138,7 +138,7 @@ var BGMPlayer={}; // 所有的接口都通过这个调用
             BGMPlayer.vars.pin.volume=volIn;
         }
         BGMPlayer.funs.Status=function(){ // 播放器状态
-            return "位置 : "+BGMPlayer.vars.pin_num+" / "+BGMPlayer.cache.list.length+
+            return "位置 : "+(BGMPlayer.vars.pin_num+1)+" / "+BGMPlayer.cache.list.length+
             "\n曲名 : "+BGMPlayer.vars.pin.src+
             "\n时长 : "+BGMPlayer.vars.pin.currentTime+" / "+BGMPlayer.vars.pin.duration+
             "\n模式 : "+BGMPlayer.funs._getModeName(BGMPlayer.vars.mode);
