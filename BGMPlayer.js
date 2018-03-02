@@ -4,7 +4,7 @@ var BGMPlayer={}; // 所有的接口都通过这个调用
     // 信息
     BGMPlayer.infos={};
         BGMPlayer.infos.full_name="BGM Player";
-        BGMPlayer.infos.version="0.1.0";
+        BGMPlayer.infos.version="0.2.0";
         BGMPlayer.infos.author="Firok";
         BGMPlayer.infos.link="https://github.com/S2Lab/BGMPlayer/";
         
@@ -168,11 +168,34 @@ var BGMPlayer={}; // 所有的接口都通过这个调用
             else
                 return "";
         }
+        BGMPlayer.funs._setCookie=function(cname,cvalue,exdays){
+            var d = new Date();
+            d.setTime(d.getTime()+(exdays*24*60*60*1000));
+            var expires = "expires="+d.toGMTString();
+            document.cookie = cname+"="+cvalue+"; "+expires;
+        }
+        BGMPlayer.funs._setCookie=function(cname,cvalue){
+            document.cookie = cname+"="+cvalue+";";
+        }
+        BGMPlayer.funs._delCookie=function(cname){
+            ;
+            document.cookie=cname+"= ;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }
+        BGMPlayer.funs._getCookie=function(cname){
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i].trim();
+                if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+            }
+            return "";
+        }
 
         // 数据
         BGMPlayer.funs.Init=function(){ // 清空缓冲区所有内容 初始化所有状态
             BGMPlayer.funs.Song_Pause(); // 如果有正在播放的音乐 停止
             BGMPlayer.vars.pin.src="";
+            BGMPlayer.vars.pin_num=-1;
             BGMPlayer.cache.list=[];
             BGMPlayer.cache.addr_list="";
             BGMPlayer.cache.addr_resource="";
@@ -199,14 +222,71 @@ var BGMPlayer={}; // 所有的接口都通过这个调用
             BGMPlayer.funs.Data_read_cookie();
         };
         BGMPlayer.funs.Data_write_cookie=function(){ // 写入cookie
-            ;
+            let data_list=JSON.stringify(BGMPlayer.cache.list);
+            let data_pin_src=BGMPlayer.vars.pin.src;
+            let data_pin_num=BGMPlayer.vars.pin_num;
+            let data_currentTime=BGMPlayer.vars.pin.currentTime;
+            let data_addr_list=BGMPlayer.cache.addr_list;
+            let data_addr_resource=BGMPlayer.cache.addr_resource;
+
+            BGMPlayer.funs._setCookie("data_list",data_list);
+            BGMPlayer.funs._setCookie("data_pin_src",data_pin_src);
+            BGMPlayer.funs._setCookie("data_pin_num",data_pin_num);
+            BGMPlayer.funs._setCookie("data_currentTime",data_currentTime);
+
+            BGMPlayer.funs._setCookie("data_addr_list",data_addr_list);
+            BGMPlayer.funs._setCookie("data_addr_resource",data_addr_resource);
+            
         };
         BGMPlayer.funs.Data_read_cookie=function(){ // 读取cookie
-            ;
+            let data_list=JSON.parse(BGMPlayer.funs._getCookie("data_list"));
+            let data_pin_src=BGMPlayer.funs._getCookie("data_pin_src");
+            let data_pin_num=BGMPlayer.funs._getCookie("data_pin_num");
+            let data_currentTime=BGMPlayer.funs._getCookie("data_currentTime");
+            let data_addr_list=BGMPlayer.funs._getCookie("data_addr_list");
+            let data_addr_resource=BGMPlayer.funs._getCookie("data_addr_resource");
+
+            BGMPlayer.cache.list=data_list;
+            BGMPlayer.vars.pin.src=data_pin_src;
+            BGMPlayer.vars.pin_num=data_pin_num;
+            BGMPlayer.vars.pin.currentTime=data_currentTime;
+            BGMPlayer.cache.addr_list=data_addr_list;
+            BGMPlayer.cache.addr_resource=data_addr_resource;
         };
+        BGMPlayer.funs._clearCookies=function(){
+            BGMPlayer.funs._delCookie("data_list");
+            BGMPlayer.funs._delCookie("data_pin_src");
+            BGMPlayer.funs._delCookie("data_pin_num");
+            BGMPlayer.funs._setCookie("data_currentTime");
+
+            BGMPlayer.funs._delCookie("data_addr_list");
+            BGMPlayer.funs._delCookie("data_addr_resource");
+        }
         BGMPlayer.funs.Data_Get_List=function(addrIn){ // 从指定地址 获取播放列表内容 并且保存到缓冲区
             ;
         };
+
+        BGMPlayer.funs.AutoInit=function(){
+            let autoloadcookie=BGMPlayer.funs._getCookie("autoloadcookie")==1;
+            if(autoloadcookie==true){
+                BGMPlayer.funs.Data_read_cookie();
+                BGMPlayer.settings._ifAutoLoadCookie=true;
+
+                BGMPlayer.settings._ifAutoSaveCookie=BGMPlayer.funs._getCookie("autosavecookie")==1;
+
+                window.onbeforeunload=
+                "if(BGMPlayer.settings._ifAutoSaveCookie){ BGMPlayer.funs.Data_write_cookie();}";
+
+            }
+            else{
+                BGMPlayer.funs.Init();
+            }
+        }
+
+    // 设置相关
+    BGMPlayer.settings={};
+        BGMPlayer.settings._ifAutoSaveCookie=false;
+        BGMPlayer.settings._ifAutoLoadCookie=false;
 
     // GUI相关
     BGMPlayer.guis={};
@@ -237,6 +317,38 @@ var BGMPlayer={}; // 所有的接口都通过这个调用
             BGMPlayer.funs.Set_Vol(parseFloat(cmd[1]) / 100);
             break;
 
+        case "set": // 设置各种属性
+            switch(cmd[1])
+            {
+            case "autosavecookie":
+                let _autosave=cmd[2]==1?1:0;
+                BGMPlayer.settings._ifAutoSaveCookie=_autosave;
+        
+                break;
+            case "autoloadcookie":
+                let _autoload=cmd[2]==1?1:0;
+                BGMPlayer.settings._ifAutoLoadCookie=_autoload;
+                break;
+
+            case "save":
+                BGMPlayer.funs.Data_write_cookie();
+                break;
+            case "load":
+                BGMPlayer.funs.Data_read_cookie();
+                break;
+
+            case "init":
+                BGMPlayer.funs.Init();
+                break;
+            case "init_net":
+                BGMPlayer.funs.Init_from_network(cmd[2],cmd[3]);
+                break;
+
+            default:
+                break;
+            }
+            break;
+
         case "status": // 获取播放器当前状态
             return BGMPlayer.funs.Status();
 
@@ -244,9 +356,9 @@ var BGMPlayer={}; // 所有的接口都通过这个调用
             return BGMPlayer.funs.Info();
 
         default: // 错误的指令
-            return "WRONG COMMAND! ("+cmdIn+")";
+            return "错误的指令! ("+cmdIn+")";
         }
-        return "DONE!";
+        return "完成!";
     }
 
 
