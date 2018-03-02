@@ -1,0 +1,34 @@
+<html>
+    
+<head>
+    <title>测试用页面 ExamplePage</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="./BGMPlayer.js"></script>
+    <script>
+        function CHECK(event){
+            if(event.keyCode==13){
+                DO();
+            }
+        }
+        function DO(){
+            let line=$("#in").val();
+            $("body").append(BGMPlayer.DO(line)+"<br>");
+            $("#in").val("");
+        }
+
+        $(document).ready(function(){
+            $("body").append("(事先添加的示例歌曲)<br>");
+            $("body").append("BGMPlayer.cache.list.push(\"test_audio2.mp3\");<br>");
+            $("body").append("BGMPlayer.cache.list.push(\"test_audio.mp3\");<br>");
+            BGMPlayer.cache.list.push("test_audio2.mp3");
+            BGMPlayer.cache.list.push("test_audio.mp3");
+        });
+    </script>
+</head>
+
+<body style="margin:0px;padding:0px;font-size:32px;">
+    <input type="text" id="in" onkeypress="CHECK(event)" style="position:fixed;bottom:20%;width:80%;height:35px;font-size:32px;border:2px solid gray;">
+    <input type="button" id="btn" onclick="DO()" style="position:fixed;bottom:20%;left:85%;width:10%;height:35px;" value="执行 DO">
+</body>
+
+</html>
